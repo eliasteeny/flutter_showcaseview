@@ -63,6 +63,11 @@ class Showcase extends StatefulWidget {
   final VoidCallback? onTargetDoubleTap;
   final VoidCallback? onTargetLongPress;
   final BorderRadius? tipBorderRadius;
+  final TooltipAlignment? tooltipAlignment;
+  final List<GlobalKey> focusedWidgets;
+  final double? focusedWidgetsOverlayHorizontalShift;
+  final double? focusedWidgetsOverlayVerticalShift;
+  final double? tooltipTopPadding;
 
   /// if disableDefaultTargetGestures parameter is true
   /// onTargetClick, onTargetDoubleTap, onTargetLongPress and
@@ -107,6 +112,11 @@ class Showcase extends StatefulWidget {
     this.onTargetDoubleTap,
     this.tipBorderRadius,
     this.disableDefaultTargetGestures = false,
+    this.focusedWidgets = const [],
+    this.tooltipAlignment,
+    this.focusedWidgetsOverlayHorizontalShift,
+    this.focusedWidgetsOverlayVerticalShift,
+    this.tooltipTopPadding,
   })  : height = null,
         width = null,
         container = null,
@@ -152,6 +162,11 @@ class Showcase extends StatefulWidget {
     this.onTargetDoubleTap,
     this.tipBorderRadius,
     this.disableDefaultTargetGestures = false,
+    this.focusedWidgets = const [],
+    this.tooltipAlignment,
+    this.focusedWidgetsOverlayHorizontalShift,
+    this.focusedWidgetsOverlayVerticalShift,
+    this.tooltipTopPadding,
   })  : showArrow = false,
         onToolTipClick = null,
         assert(overlayOpacity >= 0.0 && overlayOpacity <= 1.0,
@@ -279,6 +294,74 @@ class _ShowcaseState extends State<Showcase> {
     // provided blur is less than 0.
     blur = kIsWeb && blur < 0 ? 0 : blur;
 
+    Widget baseOverlay = ClipPath(
+      clipper: RRectClipper(
+        area: _isScrollRunning ? Rect.zero : rectBound,
+        isCircle: widget.shapeBorder == const CircleBorder(),
+        radius: _isScrollRunning ? BorderRadius.zero : widget.radius,
+        overlayPadding:
+            _isScrollRunning ? EdgeInsets.zero : widget.overlayPadding,
+      ),
+      child: blur != 0
+          ? BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                decoration: BoxDecoration(
+                  color: widget.overlayColor.withOpacity(widget.overlayOpacity),
+                ),
+              ),
+            )
+          : Container(
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+              decoration: BoxDecoration(
+                color: widget.overlayColor.withOpacity(widget.overlayOpacity),
+              ),
+            ),
+    );
+
+    if (widget.focusedWidgets.isNotEmpty) {
+      for (int i = 0; i < widget.focusedWidgets.length; i++) {
+        final otherContext = widget.focusedWidgets[i].currentContext;
+
+        if (otherContext != null) {
+          final box = otherContext.findRenderObject() as RenderBox;
+          final topLeft =
+              box.size.topLeft(box.localToGlobal(const Offset(0.0, 0.0)));
+          final bottomRight =
+              box.size.bottomRight(box.localToGlobal(const Offset(0.0, 0.0)));
+          Rect anchorBounds;
+          anchorBounds = (topLeft.dx.isNaN ||
+                  topLeft.dy.isNaN ||
+                  bottomRight.dx.isNaN ||
+                  bottomRight.dy.isNaN)
+              ? const Rect.fromLTRB(0.0, 0.0, 0.0, 0.0)
+              : Rect.fromLTRB(
+                  topLeft.dx -
+                      (widget.focusedWidgetsOverlayHorizontalShift ?? 0),
+                  topLeft.dy - (widget.focusedWidgetsOverlayVerticalShift ?? 0),
+                  bottomRight.dx +
+                      (widget.focusedWidgetsOverlayHorizontalShift ?? 0),
+                  bottomRight.dy +
+                      (widget.focusedWidgetsOverlayVerticalShift ?? 0),
+                );
+
+          baseOverlay = ClipPath(
+            clipper: RRectClipper(
+              area: _isScrollRunning ? Rect.zero : anchorBounds,
+              isCircle: widget.shapeBorder == const CircleBorder(),
+              radius: _isScrollRunning ? BorderRadius.zero : widget.radius,
+              overlayPadding:
+                  _isScrollRunning ? EdgeInsets.zero : widget.overlayPadding,
+            ),
+            child: baseOverlay,
+          );
+        }
+      }
+    }
+
     return _showShowCase
         ? Stack(
             children: [
@@ -288,37 +371,7 @@ class _ShowcaseState extends State<Showcase> {
                     _nextIfAny();
                   }
                 },
-                child: ClipPath(
-                  clipper: RRectClipper(
-                    area: _isScrollRunning ? Rect.zero : rectBound,
-                    isCircle: widget.shapeBorder == const CircleBorder(),
-                    radius:
-                        _isScrollRunning ? BorderRadius.zero : widget.radius,
-                    overlayPadding: _isScrollRunning
-                        ? EdgeInsets.zero
-                        : widget.overlayPadding,
-                  ),
-                  child: blur != 0
-                      ? BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-                          child: Container(
-                            width: MediaQuery.of(context).size.width,
-                            height: MediaQuery.of(context).size.height,
-                            decoration: BoxDecoration(
-                              color: widget.overlayColor
-                                  .withOpacity(widget.overlayOpacity),
-                            ),
-                          ),
-                        )
-                      : Container(
-                          width: MediaQuery.of(context).size.width,
-                          height: MediaQuery.of(context).size.height,
-                          decoration: BoxDecoration(
-                            color: widget.overlayColor
-                                .withOpacity(widget.overlayOpacity),
-                          ),
-                        ),
-                ),
+                child: baseOverlay,
               ),
               if (_isScrollRunning) Center(child: widget.scrollLoadingWidget),
               if (!_isScrollRunning)
@@ -354,7 +407,23 @@ class _ShowcaseState extends State<Showcase> {
                       showCaseWidgetState.disableAnimation,
                   animationDuration: widget.animationDuration,
                   borderRadius: widget.tipBorderRadius,
+                  tooltipAlignment: widget.tooltipAlignment,
+                  topPadding: widget.tooltipTopPadding,
                 ),
+              Align(
+                alignment: Alignment.bottomRight,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                      vertical: MediaQuery.of(context).viewPadding.bottom + 8,
+                      horizontal: 16),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      showCaseWidgetState.dismiss();
+                    },
+                    child: Text("Skip"),
+                  ),
+                ),
+              )
             ],
           )
         : const SizedBox.shrink();

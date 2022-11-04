@@ -29,6 +29,8 @@ import 'measure_size.dart';
 
 const _kDefaultPaddingFromParent = 14.0;
 
+enum TooltipAlignment { above, below }
+
 class ToolTipWidget extends StatefulWidget {
   final GetPosition? position;
   final Offset? offset;
@@ -48,6 +50,8 @@ class ToolTipWidget extends StatefulWidget {
   final Duration animationDuration;
   final bool disableAnimation;
   final BorderRadius? borderRadius;
+  final TooltipAlignment? tooltipAlignment;
+  final double? topPadding;
 
   const ToolTipWidget({
     Key? key,
@@ -69,6 +73,8 @@ class ToolTipWidget extends StatefulWidget {
     this.contentPadding = const EdgeInsets.symmetric(vertical: 8),
     required this.disableAnimation,
     required this.borderRadius,
+    this.tooltipAlignment,
+    this.topPadding,
   }) : super(key: key);
 
   @override
@@ -100,11 +106,11 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
         topPosition >= height;
   }
 
-  String findPositionForContent(Offset position) {
+  TooltipAlignment findPositionForContent(Offset position) {
     if (isCloseToTopOrBottom(position)) {
-      return 'ABOVE';
+      return TooltipAlignment.above;
     } else {
-      return 'BELOW';
+      return widget.tooltipAlignment ?? TooltipAlignment.below;
     }
   }
 
@@ -218,7 +224,8 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
   Widget build(BuildContext context) {
     position = widget.offset;
     final contentOrientation = findPositionForContent(position!);
-    final contentOffsetMultiplier = contentOrientation == "BELOW" ? 1.0 : -1.0;
+    final contentOffsetMultiplier =
+        contentOrientation == TooltipAlignment.below ? 1.0 : -1.0;
     isArrowUp = contentOffsetMultiplier == 1.0;
 
     final contentY = isArrowUp
@@ -238,6 +245,10 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
 
     const arrowWidth = 18.0;
     const arrowHeight = 9.0;
+
+    if (widget.topPadding != null) {
+      paddingTop = paddingTop + widget.topPadding!;
+    }
 
     if (widget.container == null) {
       return Positioned(

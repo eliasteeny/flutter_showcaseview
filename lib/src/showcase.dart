@@ -26,11 +26,11 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../showcaseview.dart';
 import 'extension.dart';
 import 'get_position.dart';
 import 'layout_overlays.dart';
 import 'shape_clipper.dart';
-import 'showcase_widget.dart';
 import 'tooltip_widget.dart';
 
 class Showcase extends StatefulWidget {
@@ -64,7 +64,7 @@ class Showcase extends StatefulWidget {
   final VoidCallback? onTargetLongPress;
   final BorderRadius? tipBorderRadius;
   final TooltipAlignment? tooltipAlignment;
-  final List<GlobalKey> focusedWidgets;
+  final DynamicKeys? focusedWidgetsKeys;
   final double? focusedWidgetsOverlayHorizontalShift;
   final double? focusedWidgetsOverlayVerticalShift;
   final double? tooltipTopPadding;
@@ -112,7 +112,7 @@ class Showcase extends StatefulWidget {
     this.onTargetDoubleTap,
     this.tipBorderRadius,
     this.disableDefaultTargetGestures = false,
-    this.focusedWidgets = const [],
+    this.focusedWidgetsKeys,
     this.tooltipAlignment,
     this.focusedWidgetsOverlayHorizontalShift,
     this.focusedWidgetsOverlayVerticalShift,
@@ -162,7 +162,7 @@ class Showcase extends StatefulWidget {
     this.onTargetDoubleTap,
     this.tipBorderRadius,
     this.disableDefaultTargetGestures = false,
-    this.focusedWidgets = const [],
+    this.focusedWidgetsKeys,
     this.tooltipAlignment,
     this.focusedWidgetsOverlayHorizontalShift,
     this.focusedWidgetsOverlayVerticalShift,
@@ -322,9 +322,11 @@ class _ShowcaseState extends State<Showcase> {
             ),
     );
 
-    if (widget.focusedWidgets.isNotEmpty) {
-      for (int i = 0; i < widget.focusedWidgets.length; i++) {
-        final otherContext = widget.focusedWidgets[i].currentContext;
+    if (widget.focusedWidgetsKeys != null) {
+      final allKeys = widget.focusedWidgetsKeys!.getAllKeys();
+
+      for (int i = 0; i < allKeys.length; i++) {
+        final otherContext = allKeys[i].currentContext;
 
         if (otherContext != null) {
           final box = otherContext.findRenderObject() as RenderBox;

@@ -68,6 +68,7 @@ class Showcase extends StatefulWidget {
   final double? focusedWidgetsOverlayHorizontalShift;
   final double? focusedWidgetsOverlayVerticalShift;
   final double? tooltipTopPadding;
+  final String? skipButtonText;
 
   /// if disableDefaultTargetGestures parameter is true
   /// onTargetClick, onTargetDoubleTap, onTargetLongPress and
@@ -117,6 +118,7 @@ class Showcase extends StatefulWidget {
     this.focusedWidgetsOverlayHorizontalShift,
     this.focusedWidgetsOverlayVerticalShift,
     this.tooltipTopPadding,
+    this.skipButtonText,
   })  : height = null,
         width = null,
         container = null,
@@ -167,6 +169,7 @@ class Showcase extends StatefulWidget {
     this.focusedWidgetsOverlayHorizontalShift,
     this.focusedWidgetsOverlayVerticalShift,
     this.tooltipTopPadding,
+    this.skipButtonText,
   })  : showArrow = false,
         onToolTipClick = null,
         assert(overlayOpacity >= 0.0 && overlayOpacity <= 1.0,
@@ -412,20 +415,22 @@ class _ShowcaseState extends State<Showcase> {
                   tooltipAlignment: widget.tooltipAlignment,
                   topPadding: widget.tooltipTopPadding,
                 ),
-              Align(
-                alignment: Alignment.bottomRight,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
+              if (widget.skipButtonText != null)
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
                       vertical: MediaQuery.of(context).viewPadding.bottom + 8,
-                      horizontal: 16),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      showCaseWidgetState.dismiss();
-                    },
-                    child: Text("Skip"),
+                      horizontal: 16,
+                    ),
+                    child: ElevatedButton(
+                      onPressed: () {
+                        showCaseWidgetState.dismiss();
+                      },
+                      child: Text(widget.skipButtonText!),
+                    ),
                   ),
-                ),
-              )
+                )
             ],
           )
         : const SizedBox.shrink();

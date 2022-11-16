@@ -200,10 +200,13 @@ class ShowCaseWidgetState extends State<ShowCaseWidget> {
     }
   }
 
+  bool isLastItem() =>
+      ids != null && ((activeWidgetId ?? 0) + 1) >= ids!.length && mounted;
+
   /// Completes current active showcase and starts previous one
   /// otherwise will finish the entire showcase view
   void previous() {
-    if (ids != null && ((activeWidgetId ?? 0) - 1) >= 0 && mounted) {
+    if (canGoToPrevious()) {
       setState(() {
         _onComplete();
         activeWidgetId = activeWidgetId! - 1;
@@ -217,6 +220,9 @@ class ShowCaseWidgetState extends State<ShowCaseWidget> {
       });
     }
   }
+
+  bool canGoToPrevious() =>
+      ids != null && ((activeWidgetId ?? 0) - 1) >= 0 && mounted;
 
   /// Dismiss entire showcase view
   void dismiss() {

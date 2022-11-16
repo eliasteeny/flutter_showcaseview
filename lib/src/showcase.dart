@@ -227,6 +227,10 @@ class Showcase extends StatefulWidget {
   final double? focusedWidgetsOverlayVerticalShift;
   final double? tooltipTopPadding;
   final String? skipButtonText;
+  final String? previousButtonText;
+  final String? nextButtonText;
+  final String? doneButtonText;
+  final bool disableNextOnTap;
 
   const Showcase({
     required this.key,
@@ -273,6 +277,10 @@ class Showcase extends StatefulWidget {
     this.scaleAnimationDuration = const Duration(milliseconds: 300),
     this.scaleAnimationCurve = Curves.easeIn,
     this.scaleAnimationAlignment,
+    this.previousButtonText,
+    this.nextButtonText,
+    this.doneButtonText,
+    this.disableNextOnTap = false,
   })  : height = null,
         width = null,
         container = null,
@@ -320,6 +328,10 @@ class Showcase extends StatefulWidget {
     this.focusedWidgetsOverlayVerticalShift,
     this.tooltipTopPadding,
     this.skipButtonText,
+    this.previousButtonText,
+    this.nextButtonText,
+    this.doneButtonText,
+    this.disableNextOnTap = false,
   })  : showArrow = false,
         onToolTipClick = null,
         scaleAnimationDuration = const Duration(milliseconds: 300),
@@ -433,6 +445,10 @@ class _ShowcaseState extends State<Showcase> {
   }
 
   Future<void> _getOnTargetTap() async {
+    if (widget.disableNextOnTap) {
+      return;
+    }
+
     if (widget.disposeOnTap == true) {
       await _reverseAnimateTooltip();
       showCaseWidgetState.dismiss();
@@ -603,23 +619,37 @@ class _ShowcaseState extends State<Showcase> {
                   isTooltipDismissed: _isTooltipDismissed,
                   tooltipAlignment: widget.tooltipAlignment,
                   topPadding: widget.tooltipTopPadding,
+                  showPreviousButton: showCaseWidgetState.canGoToPrevious(),
+                  onNextPressed: () => showCaseWidgetState.next(),
+                  onPreviousPressed: () => showCaseWidgetState.previous(),
+                  previousButtonText: widget.previousButtonText,
+                  nextButtonText: showCaseWidgetState.isLastItem()
+                      ? widget.doneButtonText
+                      : widget.nextButtonText,
                 ),
               if (widget.skipButtonText != null)
                 Align(
-                  alignment: Alignment.bottomRight,
+                  alignment: Alignment.bottomCenter,
                   child: Padding(
                     padding: EdgeInsets.symmetric(
-                      vertical: MediaQuery.of(context).viewPadding.bottom + 8,
+                      vertical: MediaQuery.of(context).viewPadding.bottom + 16,
                       horizontal: 16,
                     ),
-                    child: ElevatedButton(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        side: BorderSide(
+                          color: Theme.of(context).primaryColor,
+                          width: 2,
+                        ),
+                      ),
                       onPressed: () {
                         showCaseWidgetState.dismiss();
                       },
                       child: Text(widget.skipButtonText!),
                     ),
                   ),
-                )
+                ),
             ],
           )
         : const SizedBox.shrink();

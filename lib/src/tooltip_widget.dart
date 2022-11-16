@@ -59,6 +59,11 @@ class ToolTipWidget extends StatefulWidget {
   final bool isTooltipDismissed;
   final TooltipAlignment? tooltipAlignment;
   final double? topPadding;
+  final bool showPreviousButton;
+  final String? previousButtonText;
+  final String? nextButtonText;
+  final void Function()? onPreviousPressed;
+  final void Function()? onNextPressed;
 
   const ToolTipWidget({
     Key? key,
@@ -89,6 +94,11 @@ class ToolTipWidget extends StatefulWidget {
     this.isTooltipDismissed = false,
     this.tooltipAlignment,
     this.topPadding,
+    this.onNextPressed,
+    this.nextButtonText,
+    this.onPreviousPressed,
+    this.previousButtonText,
+    this.showPreviousButton = false,
   }) : super(key: key);
 
   @override
@@ -453,6 +463,7 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
                                                   ),
                                                 ),
                                       ),
+                                      _buildBottomButtons(context),
                                     ],
                                   )
                                 ],
@@ -527,6 +538,52 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
           ..layout())
         .size;
     return textPainter;
+  }
+
+  Widget _buildBottomButtons(BuildContext context) {
+    return Row(
+      children: [
+        if (widget.previousButtonText != null && widget.showPreviousButton)
+          Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: widget.onPreviousPressed,
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Text(
+                  widget.previousButtonText!,
+                  style: widget.descTextStyle ??
+                      Theme.of(context)
+                          .textTheme
+                          .subtitle2!
+                          .merge(TextStyle(color: widget.textColor)),
+                ),
+              ),
+            ),
+          ),
+        const Spacer(),
+        if (widget.nextButtonText != null)
+          Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              borderRadius:
+                  widget.tooltipBorderRadius ?? BorderRadius.circular(8.0),
+              onTap: widget.onNextPressed,
+              child: Padding(
+                padding: const EdgeInsets.all(4.0),
+                child: Text(
+                  widget.nextButtonText!,
+                  style: widget.descTextStyle ??
+                      Theme.of(context)
+                          .textTheme
+                          .subtitle2!
+                          .merge(TextStyle(color: widget.textColor)),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }
 

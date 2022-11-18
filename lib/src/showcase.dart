@@ -524,6 +524,8 @@ class _ShowcaseState extends State<Showcase> {
             ),
     );
 
+    final focusedWidgetsPointerAbsorber = <Widget>[];
+
     if (widget.focusedWidgetsKeys != null) {
       final allKeys = widget.focusedWidgetsKeys!.getAllKeys();
 
@@ -564,6 +566,19 @@ class _ShowcaseState extends State<Showcase> {
             ),
             child: baseOverlay,
           );
+
+          focusedWidgetsPointerAbsorber.add(
+            _TargetWidget(
+              offset: box.size.center(topLeft),
+              size: anchorBounds.size,
+              onTap: _getOnTargetTap,
+              radius: widget.targetBorderRadius,
+              onDoubleTap: widget.onTargetDoubleTap,
+              onLongPress: widget.onTargetLongPress,
+              shapeBorder: widget.targetShapeBorder,
+              disableDefaultChildGestures: widget.disableDefaultTargetGestures,
+            ),
+          );
         }
       }
     }
@@ -580,7 +595,7 @@ class _ShowcaseState extends State<Showcase> {
                 child: baseOverlay,
               ),
               if (_isScrollRunning) Center(child: widget.scrollLoadingWidget),
-              if (!_isScrollRunning)
+              if (!_isScrollRunning) ...[
                 _TargetWidget(
                   offset: offset,
                   size: size,
@@ -592,6 +607,8 @@ class _ShowcaseState extends State<Showcase> {
                   disableDefaultChildGestures:
                       widget.disableDefaultTargetGestures,
                 ),
+                ...focusedWidgetsPointerAbsorber,
+              ],
               if (!_isScrollRunning)
                 ToolTipWidget(
                   position: position,

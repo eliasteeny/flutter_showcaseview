@@ -391,13 +391,19 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
                           left: _getLeft() == null
                               ? null
                               : (widget.position!.getCenter() -
-                                  (arrowWidth / 2) -
-                                  (_getLeft() ?? 0)),
+                                      (arrowWidth / 2) -
+                                      (_getLeft() ?? 0)) +
+                                  (widget.position!.getLeft() <= 10 ? 5 : 0),
                           right: _getLeft() == null
                               ? (MediaQuery.of(context).size.width -
                                       widget.position!.getCenter()) -
                                   (_getRight() ?? 0) -
-                                  (arrowWidth / 2)
+                                  (arrowWidth / 2) +
+                                  (MediaQuery.of(context).size.width -
+                                              widget.position!.getRight() <=
+                                          10
+                                      ? 5
+                                      : 0)
                               : null,
                           child: CustomPaint(
                             painter: _Arrow(

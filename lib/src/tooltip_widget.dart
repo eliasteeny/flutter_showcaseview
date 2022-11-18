@@ -463,6 +463,7 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
                                                   ),
                                                 ),
                                       ),
+                                      const SizedBox(height: 8),
                                       _buildBottomButtons(context),
                                     ],
                                   )
@@ -552,11 +553,10 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
                 padding: const EdgeInsets.all(4.0),
                 child: Text(
                   widget.previousButtonText!,
-                  style: widget.descTextStyle ??
-                      Theme.of(context)
-                          .textTheme
-                          .subtitle2!
-                          .merge(TextStyle(color: widget.textColor)),
+                  style: Theme.of(context)
+                      .textTheme
+                      .subtitle2
+                      ?.copyWith(color: Theme.of(context).primaryColor),
                 ),
               ),
             ),
@@ -573,11 +573,10 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
                 padding: const EdgeInsets.all(4.0),
                 child: Text(
                   widget.nextButtonText!,
-                  style: widget.descTextStyle ??
-                      Theme.of(context)
-                          .textTheme
-                          .subtitle2!
-                          .merge(TextStyle(color: widget.textColor)),
+                  style: Theme.of(context)
+                      .textTheme
+                      .subtitle2
+                      ?.copyWith(color: Theme.of(context).primaryColor),
                 ),
               ),
             ),

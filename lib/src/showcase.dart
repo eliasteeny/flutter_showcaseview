@@ -633,16 +633,8 @@ class _ShowcaseState extends State<Showcase> {
                   child: Padding(
                     padding: EdgeInsets.symmetric(
                       vertical: MediaQuery.of(context).viewPadding.bottom + 16,
-                      horizontal: 16,
                     ),
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        side: BorderSide(
-                          color: Theme.of(context).primaryColor,
-                          width: 2,
-                        ),
-                      ),
+                    child: ElevatedButton(
                       onPressed: () {
                         showCaseWidgetState.dismiss();
                       },

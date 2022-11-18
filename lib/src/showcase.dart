@@ -231,6 +231,7 @@ class Showcase extends StatefulWidget {
   final String? nextButtonText;
   final String? doneButtonText;
   final bool disableNextOnTap;
+  final bool disableAutoScroll;
 
   const Showcase({
     required this.key,
@@ -281,6 +282,7 @@ class Showcase extends StatefulWidget {
     this.nextButtonText,
     this.doneButtonText,
     this.disableNextOnTap = false,
+    this.disableAutoScroll = false,
   })  : height = null,
         width = null,
         container = null,
@@ -332,6 +334,7 @@ class Showcase extends StatefulWidget {
     this.nextButtonText,
     this.doneButtonText,
     this.disableNextOnTap = false,
+    this.disableAutoScroll = false,
   })  : showArrow = false,
         onToolTipClick = null,
         scaleAnimationDuration = const Duration(milliseconds: 300),
@@ -385,7 +388,8 @@ class _ShowcaseState extends State<Showcase> {
     });
 
     if (activeStep == widget.key) {
-      if (ShowCaseWidget.of(context).enableAutoScroll) {
+      if (!widget.disableAutoScroll &&
+          ShowCaseWidget.of(context).enableAutoScroll) {
         _scrollIntoView();
       }
 

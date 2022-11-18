@@ -631,7 +631,8 @@ class _ShowcaseState extends State<Showcase> {
                       ? widget.doneButtonText
                       : widget.nextButtonText,
                 ),
-              if (widget.skipButtonText != null)
+              if (widget.skipButtonText != null &&
+                  !showCaseWidgetState.isLastItem())
                 Align(
                   alignment: Alignment.bottomCenter,
                   child: Padding(

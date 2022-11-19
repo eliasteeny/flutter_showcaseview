@@ -232,6 +232,8 @@ class Showcase extends StatefulWidget {
   final String? doneButtonText;
   final bool disableNextOnTap;
   final bool disableAutoScroll;
+  final void Function()? onSkipPressed;
+  final void Function()? onDonePressed;
 
   const Showcase({
     required this.key,
@@ -283,6 +285,8 @@ class Showcase extends StatefulWidget {
     this.doneButtonText,
     this.disableNextOnTap = false,
     this.disableAutoScroll = false,
+    this.onSkipPressed,
+    this.onDonePressed,
   })  : height = null,
         width = null,
         container = null,
@@ -335,6 +339,8 @@ class Showcase extends StatefulWidget {
     this.doneButtonText,
     this.disableNextOnTap = false,
     this.disableAutoScroll = false,
+    this.onSkipPressed,
+    this.onDonePressed,
   })  : showArrow = false,
         onToolTipClick = null,
         scaleAnimationDuration = const Duration(milliseconds: 300),
@@ -641,7 +647,12 @@ class _ShowcaseState extends State<Showcase> {
                   tooltipAlignment: widget.tooltipAlignment,
                   topPadding: widget.tooltipTopPadding,
                   showPreviousButton: showCaseWidgetState.canGoToPrevious(),
-                  onNextPressed: () => showCaseWidgetState.next(),
+                  onNextPressed: () {
+                    if (showCaseWidgetState.isLastItem()) {
+                      widget.onDonePressed?.call();
+                    }
+                    showCaseWidgetState.next();
+                  },
                   onPreviousPressed: () => showCaseWidgetState.previous(),
                   previousButtonText: widget.previousButtonText,
                   nextButtonText: showCaseWidgetState.isLastItem()
@@ -659,6 +670,7 @@ class _ShowcaseState extends State<Showcase> {
                     child: ElevatedButton(
                       onPressed: () {
                         showCaseWidgetState.dismiss();
+                        widget.onSkipPressed?.call();
                       },
                       child: Text(widget.skipButtonText!),
                     ),

@@ -234,6 +234,9 @@ class Showcase extends StatefulWidget {
   final bool disableAutoScroll;
   final void Function()? onSkipPressed;
   final void Function()? onDonePressed;
+  final bool addBorderAroundTarget;
+  final Color? borderAroundTargetColor;
+  final bool joinShowcaseAndFocusedWidgets;
 
   const Showcase({
     required this.key,
@@ -287,6 +290,9 @@ class Showcase extends StatefulWidget {
     this.disableAutoScroll = false,
     this.onSkipPressed,
     this.onDonePressed,
+    this.addBorderAroundTarget = false,
+    this.borderAroundTargetColor,
+    this.joinShowcaseAndFocusedWidgets = false,
   })  : height = null,
         width = null,
         container = null,
@@ -301,7 +307,13 @@ class Showcase extends StatefulWidget {
             disposeOnTap == null
                 ? true
                 : (onTargetClick == null ? false : true),
-            "onTargetClick is required if you're using disposeOnTap");
+            "onTargetClick is required if you're using disposeOnTap"),
+        assert(
+            joinShowcaseAndFocusedWidgets == false
+                ? true
+                : targetBorderRadius == null ||
+                    targetBorderRadius == BorderRadius.zero,
+            "Can't join showcase and focused widgets with target border radius");
 
   const Showcase.withWidget({
     required this.key,
@@ -341,6 +353,9 @@ class Showcase extends StatefulWidget {
     this.disableAutoScroll = false,
     this.onSkipPressed,
     this.onDonePressed,
+    this.addBorderAroundTarget = false,
+    this.borderAroundTargetColor,
+    this.joinShowcaseAndFocusedWidgets = false,
   })  : showArrow = false,
         onToolTipClick = null,
         scaleAnimationDuration = const Duration(milliseconds: 300),
@@ -358,7 +373,13 @@ class Showcase extends StatefulWidget {
         tooltipBorderRadius = null,
         tooltipPadding = const EdgeInsets.symmetric(vertical: 8),
         assert(overlayOpacity >= 0.0 && overlayOpacity <= 1.0,
-            "overlay opacity must be between 0 and 1.");
+            "overlay opacity must be between 0 and 1."),
+        assert(
+            joinShowcaseAndFocusedWidgets == false
+                ? true
+                : targetBorderRadius == null ||
+                    targetBorderRadius == BorderRadius.zero,
+            "Can't join showcase and focused widgets with target border radius");
 
   @override
   State<Showcase> createState() => _ShowcaseState();
@@ -530,6 +551,50 @@ class _ShowcaseState extends State<Showcase> {
             ),
     );
 
+    baseOverlay = Stack(
+      children: [
+        baseOverlay,
+        if (!_isScrollRunning && widget.addBorderAroundTarget)
+          Positioned(
+            left: rectBound.left,
+            top: rectBound.top,
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  left: BorderSide(
+                    width: 2,
+                    color: widget.borderAroundTargetColor ??
+                        Colors.white.withOpacity(0.5),
+                  ),
+                  top: BorderSide(
+                    width: 2,
+                    color: widget.borderAroundTargetColor ??
+                        Colors.white.withOpacity(0.5),
+                  ),
+                  right: BorderSide(
+                    width: 2,
+                    color: widget.borderAroundTargetColor ??
+                        Colors.white.withOpacity(0.5),
+                  ),
+                  bottom: widget.joinShowcaseAndFocusedWidgets
+                      ? BorderSide.none
+                      : BorderSide(
+                          width: 2,
+                          color: widget.borderAroundTargetColor ??
+                              Colors.white.withOpacity(0.5),
+                        ),
+                ),
+                borderRadius: widget.joinShowcaseAndFocusedWidgets
+                    ? null
+                    : widget.targetBorderRadius,
+              ),
+              width: rectBound.width,
+              height: rectBound.height + widget.targetPadding.vertical,
+            ),
+          ),
+      ],
+    );
+
     final focusedWidgetsPointerAbsorber = <Widget>[];
 
     if (widget.focusedWidgetsKeys != null) {
@@ -560,17 +625,59 @@ class _ShowcaseState extends State<Showcase> {
                       (widget.focusedWidgetsOverlayVerticalShift ?? 0),
                 );
 
-          baseOverlay = ClipPath(
-            clipper: RRectClipper(
-              area: _isScrollRunning ? Rect.zero : anchorBounds,
-              isCircle: widget.targetShapeBorder == const CircleBorder(),
-              radius: _isScrollRunning
-                  ? BorderRadius.zero
-                  : widget.targetBorderRadius,
-              overlayPadding:
-                  _isScrollRunning ? EdgeInsets.zero : widget.targetPadding,
-            ),
-            child: baseOverlay,
+          baseOverlay = Stack(
+            children: [
+              ClipPath(
+                clipper: RRectClipper(
+                  area: _isScrollRunning ? Rect.zero : anchorBounds,
+                  isCircle: widget.targetShapeBorder == const CircleBorder(),
+                  radius: _isScrollRunning
+                      ? BorderRadius.zero
+                      : widget.targetBorderRadius,
+                  overlayPadding:
+                      _isScrollRunning ? EdgeInsets.zero : widget.targetPadding,
+                ),
+                child: baseOverlay,
+              ),
+              if (!_isScrollRunning && widget.addBorderAroundTarget)
+                Positioned(
+                  left: anchorBounds.left,
+                  top: anchorBounds.top,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                          width: 2,
+                          color: widget.borderAroundTargetColor ??
+                              Colors.white.withOpacity(0.5),
+                        ),
+                        bottom: BorderSide(
+                          width: 2,
+                          color: widget.borderAroundTargetColor ??
+                              Colors.white.withOpacity(0.5),
+                        ),
+                        right: BorderSide(
+                          width: 2,
+                          color: widget.borderAroundTargetColor ??
+                              Colors.white.withOpacity(0.5),
+                        ),
+                        top: widget.joinShowcaseAndFocusedWidgets
+                            ? BorderSide.none
+                            : BorderSide(
+                                width: 2,
+                                color: widget.borderAroundTargetColor ??
+                                    Colors.white.withOpacity(0.5),
+                              ),
+                      ),
+                      borderRadius: widget.joinShowcaseAndFocusedWidgets
+                          ? null
+                          : widget.targetBorderRadius,
+                    ),
+                    width: anchorBounds.width,
+                    height: anchorBounds.height,
+                  ),
+                ),
+            ],
           );
 
           focusedWidgetsPointerAbsorber.add(

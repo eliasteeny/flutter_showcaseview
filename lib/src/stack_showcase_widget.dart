@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import '../showcaseview.dart';
 
 class StackShowCaseWidget extends StatefulWidget {
@@ -243,7 +244,10 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
       for (final callback in _onStartCallbacks) {
         callback.call(currentIndex!);
       }
-      setState(() {});
+
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        setState(() {});
+      });
     }
     _ensureVisible();
     if (currentIndex! < allKeys!.length) {

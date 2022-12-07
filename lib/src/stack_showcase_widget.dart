@@ -132,6 +132,12 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
     _onStartCallbacks.add(onStart);
   }
 
+  void rebuild() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   /// Starts Showcase view from the beginning of specified list of widget ids.
   void startShowCase(List<GlobalKey<StackShowcaseState>> keys) {
     if (mounted) {
@@ -282,7 +288,9 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
       return const SizedBox();
     }
 
-    return overlayWidget;
+    return OrientationBuilder(builder: (context, orientation) {
+      return overlayWidget;
+    });
   }
 
   @override

@@ -169,6 +169,7 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
           _isManuallyScrolling = true;
         });
         await scrollFuture;
+        await Future<void>.delayed(const Duration(milliseconds: 200));
         setState(() {
           _isManuallyScrolling = false;
         });

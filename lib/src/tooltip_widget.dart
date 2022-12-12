@@ -414,7 +414,7 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
     }
 
     if (contentY > MediaQuery.of(context).size.height - tooltipHeight) {
-      contentY = contentY - tooltipHeight - 8;
+      contentY = MediaQuery.of(context).size.height - tooltipHeight - 8;
     }
 
     if (widget.container == null) {

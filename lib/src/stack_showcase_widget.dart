@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import '../showcaseview.dart';
@@ -98,11 +100,12 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
   late bool enableAutoPlayLock;
   late bool enableAutoScroll;
   late bool disableBarrierInteraction;
+  bool _isManuallyScrolling = false;
 
   /// Returns value of  [ShowCaseWidget.blurValue]
   double get blurValue => widget.blurValue;
 
-  final List<void Function(int)> _onStartCallbacks = [];
+  Future<void>? Function(int)? _onScrollToCallback;
 
   @override
   void initState() {
@@ -128,8 +131,8 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
   }
 
   /// The callback will be automatically removed after the showcase is done
-  void registerOnStart({required void Function(int index) onStart}) {
-    _onStartCallbacks.add(onStart);
+  void registerScrollTo({required Future<void>? Function(int index) onStart}) {
+    _onScrollToCallback = onStart;
   }
 
   void rebuild() {
@@ -156,13 +159,31 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
       return;
     }
 
+    bool didScrollManually = false;
+
+    if (_onScrollToCallback != null) {
+      final scrollFuture = _onScrollToCallback!.call(currentIndex!);
+
+      if (scrollFuture != null) {
+        setState(() {
+          _isManuallyScrolling = true;
+        });
+        await scrollFuture;
+        setState(() {
+          _isManuallyScrolling = false;
+        });
+        didScrollManually = true;
+      }
+    }
+
     final currentState = allKeys![currentIndex!].currentState;
 
     if (currentState == null) {
       return;
     }
 
-    final scrollFuture = currentState.scrollIntoView();
+    final scrollFuture =
+        currentState.scrollIntoView(disableScroll: didScrollManually);
 
     setState(() {});
 
@@ -246,15 +267,19 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
   }
 
   void _onStart() {
-    if (_onStartCallbacks.isNotEmpty) {
-      for (final callback in _onStartCallbacks) {
-        callback.call(currentIndex!);
-      }
+    // if (_onStartCallbacks.isNotEmpty) {
+    //   for (final callback in _onStartCallbacks) {
+    //     callback.call(currentIndex!);
+    //   }
 
-      SchedulerBinding.instance.addPostFrameCallback((_) {
-        setState(() {});
-      });
-    }
+    //   SchedulerBinding.instance.addPostFrameCallback((_) {
+    //     setState(() {});
+    //   });
+    // }
+
+    // if(_onStartCallback != null) {
+
+    // }
     _ensureVisible();
     if (currentIndex! < allKeys!.length) {
       widget.onStart?.call(currentIndex, allKeys![currentIndex!]);
@@ -266,7 +291,7 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
   }
 
   void _cleanupAfterSteps() {
-    _onStartCallbacks.removeWhere((element) => true);
+    _onScrollToCallback = null;
     currentIndex = null;
     allKeys = null;
   }
@@ -298,7 +323,19 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
     return Stack(
       children: [
         widget.builder,
-        renderShowcase(),
+        if (!_isManuallyScrolling)
+          renderShowcase()
+        else
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
+              decoration: BoxDecoration(
+                color: Colors.black45.withOpacity(0.75),
+              ),
+            ),
+          ),
       ],
     );
   }

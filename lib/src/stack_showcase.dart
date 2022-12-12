@@ -450,9 +450,12 @@ class StackShowcaseState extends State<StackShowcase> {
     });
   }
 
-  Future<void> scrollIntoView() async {
+  Future<void> scrollIntoView({
+    bool disableScroll = false,
+  }) async {
     if (widget.disableAutoScroll ||
-        !StackShowCaseWidget.of(context).enableAutoScroll) {
+        !StackShowCaseWidget.of(context).enableAutoScroll ||
+        disableScroll) {
       return;
     }
 
@@ -463,6 +466,7 @@ class StackShowcaseState extends State<StackShowcase> {
       // setState(() {
 
       // });
+
       await Scrollable.ensureVisible(
         (widget.key as GlobalKey).currentContext!,
         duration: showCaseWidgetState.widget.scrollDuration,

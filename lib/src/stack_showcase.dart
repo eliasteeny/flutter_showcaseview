@@ -482,15 +482,23 @@ class StackShowcaseState extends State<StackShowcase> {
     return completer.future;
   }
 
-  Widget? getOverlayWidget() {
-    final box = context.findRenderObject() as RenderBox?;
-
-    if (box == null) {
+  RenderBox? _getRenderObjectFromContext(BuildContext buildContext) {
+    try {
+      return buildContext.findRenderObject() as RenderBox?;
+    } catch (_) {
       return null;
     }
+  }
+
+  Widget? getOverlayWidget() {
     return AnimatedBuilder(
       animation: ModalRoute.of(context)!.secondaryAnimation!,
-      builder: (context, _) {
+      builder: (animatedBuilderContext, _) {
+        final box = _getRenderObjectFromContext(context);
+
+        if (box == null) {
+          return const SizedBox();
+        }
         final topLeft =
             box.size.topLeft(box.localToGlobal(const Offset(0.0, 0.0)));
         final bottomRight =

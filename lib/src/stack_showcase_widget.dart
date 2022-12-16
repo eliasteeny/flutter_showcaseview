@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import '../showcaseview.dart';
+import 'utils.dart';
 
 class StackShowCaseWidget extends StatefulWidget {
   final Builder builder;
@@ -267,6 +268,10 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
     }
   }
 
+  void dismissWithoutRebuild() {
+    _cleanupAfterSteps();
+  }
+
   void _onStart() {
     // if (_onStartCallbacks.isNotEmpty) {
     //   for (final callback in _onStartCallbacks) {
@@ -289,6 +294,10 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
 
   void _onComplete() {
     widget.onComplete?.call(currentIndex, allKeys![currentIndex!]);
+  }
+
+  bool isCurrentlyDisplayed() {
+    return currentIndex != null && allKeys != null;
   }
 
   void _cleanupAfterSteps() {
@@ -327,16 +336,7 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
         if (!_isManuallyScrolling)
           renderShowcase()
         else
-          BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 2, sigmaY: 2),
-            child: Container(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height,
-              decoration: BoxDecoration(
-                color: Colors.black45.withOpacity(0.75),
-              ),
-            ),
-          ),
+          const BlockForegroundWidget(),
       ],
     );
   }

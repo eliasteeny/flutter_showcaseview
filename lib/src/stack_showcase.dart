@@ -450,37 +450,37 @@ class StackShowcaseState extends State<StackShowcase> {
     });
   }
 
-  Future<void> scrollIntoView({
-    bool disableScroll = false,
-  }) async {
-    if (widget.disableAutoScroll ||
-        !StackShowCaseWidget.of(context).enableAutoScroll ||
-        disableScroll) {
-      return;
-    }
+  // Future<void> scrollIntoView({
+  //   bool disableScroll = false,
+  // }) async {
+  //   if (widget.disableAutoScroll ||
+  //       !StackShowCaseWidget.of(context).enableAutoScroll ||
+  //       disableScroll) {
+  //     return;
+  //   }
 
-    final completer = Completer<void>();
+  //   final completer = Completer<void>();
 
-    _isScrollRunning = true;
-    ambiguate(WidgetsBinding.instance)?.addPostFrameCallback((timeStamp) async {
-      // setState(() {
+  //   _isScrollRunning = true;
+  //   ambiguate(WidgetsBinding.instance)?.addPostFrameCallback((timeStamp) async {
+  //     // setState(() {
 
-      // });
+  //     // });
 
-      await Scrollable.ensureVisible(
-        (widget.key as GlobalKey).currentContext!,
-        duration: showCaseWidgetState.widget.scrollDuration,
-        alignment: 0.5,
-      );
-      // setState(() {
-      _isScrollRunning = false;
-      // });
+  //     await Scrollable.ensureVisible(
+  //       (widget.key as GlobalKey).currentContext!,
+  //       duration: showCaseWidgetState.widget.scrollDuration,
+  //       alignment: 0.5,
+  //     );
+  //     // setState(() {
+  //     _isScrollRunning = false;
+  //     // });
 
-      completer.complete();
-    });
+  //     completer.complete();
+  //   });
 
-    return completer.future;
-  }
+  //   return completer.future;
+  // }
 
   RenderBox? _getRenderObjectFromContext(BuildContext buildContext) {
     try {

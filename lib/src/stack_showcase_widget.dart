@@ -69,7 +69,10 @@ class StackShowCaseWidget extends StatefulWidget {
 
   final void Function(Object error, StackTrace stackTrace) onError;
 
+  final bool handleWillPopScope;
+
   const StackShowCaseWidget({
+    Key? key,
     required this.builder,
     this.onFinish,
     this.onStart,
@@ -83,8 +86,9 @@ class StackShowCaseWidget extends StatefulWidget {
     this.disableScaleAnimation = false,
     this.enableAutoScroll = false,
     this.disableBarrierInteraction = false,
+    this.handleWillPopScope = false,
     required this.onError,
-  });
+  }) : super(key: key);
 
   static StackShowCaseWidgetState of(BuildContext context) {
     final state = context.findAncestorStateOfType<StackShowCaseWidgetState>();
@@ -385,7 +389,17 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
         return const SizedBox();
       }
 
-      return _Overlay(showcaseKey: allKeys![currentIndex!]);
+      return _Overlay(
+        showcaseKey: allKeys![currentIndex!],
+        addWillPopScope: widget.handleWillPopScope,
+        onWillPopPressed: () {
+          if (canGoToPrevious()) {
+            previous();
+          } else {
+            dismiss();
+          }
+        },
+      );
     } catch (error, stackTrace) {
       widget.onError(error, stackTrace);
       _cleanupAfterSteps();
@@ -414,9 +428,13 @@ class _Overlay extends StatelessWidget {
   const _Overlay({
     Key? key,
     required this.showcaseKey,
+    this.addWillPopScope = false,
+    this.onWillPopPressed,
   }) : super(key: key);
 
   final GlobalKey<StackShowcaseState> showcaseKey;
+  final bool addWillPopScope;
+  final void Function()? onWillPopPressed;
 
   RenderBox? _getRenderObjectFromContext() {
     try {
@@ -435,45 +453,53 @@ class _Overlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OrientationBuilder(builder: (context, orientation) {
-      return AnimatedBuilder(
-        animation: ModalRoute.of(context)!.secondaryAnimation!,
-        builder: (animatedBuilderContext, _) {
-          final box = _getRenderObjectFromContext();
+    return WillPopScope(
+      onWillPop: addWillPopScope
+          ? () async {
+              onWillPopPressed?.call();
+              return false;
+            }
+          : null,
+      child: OrientationBuilder(builder: (context, orientation) {
+        return AnimatedBuilder(
+          animation: ModalRoute.of(context)!.secondaryAnimation!,
+          builder: (animatedBuilderContext, _) {
+            final box = _getRenderObjectFromContext();
 
-          if (box == null) {
-            return const SizedBox();
-          }
-          final topLeft =
-              box.size.topLeft(box.localToGlobal(const Offset(0.0, 0.0)));
-          final bottomRight =
-              box.size.bottomRight(box.localToGlobal(const Offset(0.0, 0.0)));
-          Rect anchorBounds;
-          anchorBounds = (topLeft.dx.isNaN ||
-                  topLeft.dy.isNaN ||
-                  bottomRight.dx.isNaN ||
-                  bottomRight.dy.isNaN)
-              ? const Rect.fromLTRB(0.0, 0.0, 0.0, 0.0)
-              : Rect.fromLTRB(
-                  topLeft.dx,
-                  topLeft.dy,
-                  bottomRight.dx,
-                  bottomRight.dy,
-                );
-          final anchorCenter = box.size.center(topLeft);
+            if (box == null) {
+              return const SizedBox();
+            }
+            final topLeft =
+                box.size.topLeft(box.localToGlobal(const Offset(0.0, 0.0)));
+            final bottomRight =
+                box.size.bottomRight(box.localToGlobal(const Offset(0.0, 0.0)));
+            Rect anchorBounds;
+            anchorBounds = (topLeft.dx.isNaN ||
+                    topLeft.dy.isNaN ||
+                    bottomRight.dx.isNaN ||
+                    bottomRight.dy.isNaN)
+                ? const Rect.fromLTRB(0.0, 0.0, 0.0, 0.0)
+                : Rect.fromLTRB(
+                    topLeft.dx,
+                    topLeft.dy,
+                    bottomRight.dx,
+                    bottomRight.dy,
+                  );
+            final anchorCenter = box.size.center(topLeft);
 
-          final size = MediaQuery.of(context).size;
+            final size = MediaQuery.of(context).size;
 
-          return buildOverlayOnTarget(
-            anchorCenter,
-            anchorBounds.size,
-            anchorBounds,
-            size,
-            context,
-          );
-        },
-      );
-    });
+            return buildOverlayOnTarget(
+              anchorCenter,
+              anchorBounds.size,
+              anchorBounds,
+              size,
+              context,
+            );
+          },
+        );
+      }),
+    );
   }
 
   Widget buildOverlayOnTarget(

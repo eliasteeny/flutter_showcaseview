@@ -69,8 +69,6 @@ class StackShowCaseWidget extends StatefulWidget {
 
   final void Function(Object error, StackTrace stackTrace) onError;
 
-  final bool handleWillPopScope;
-
   const StackShowCaseWidget({
     Key? key,
     required this.builder,
@@ -86,7 +84,6 @@ class StackShowCaseWidget extends StatefulWidget {
     this.disableScaleAnimation = false,
     this.enableAutoScroll = false,
     this.disableBarrierInteraction = false,
-    this.handleWillPopScope = false,
     required this.onError,
   }) : super(key: key);
 
@@ -391,14 +388,6 @@ class StackShowCaseWidgetState extends State<StackShowCaseWidget> {
 
       return _Overlay(
         showcaseKey: allKeys![currentIndex!],
-        addWillPopScope: widget.handleWillPopScope,
-        onWillPopPressed: () {
-          if (canGoToPrevious()) {
-            previous();
-          } else {
-            dismiss();
-          }
-        },
       );
     } catch (error, stackTrace) {
       widget.onError(error, stackTrace);
@@ -428,13 +417,9 @@ class _Overlay extends StatelessWidget {
   const _Overlay({
     Key? key,
     required this.showcaseKey,
-    this.addWillPopScope = false,
-    this.onWillPopPressed,
   }) : super(key: key);
 
   final GlobalKey<StackShowcaseState> showcaseKey;
-  final bool addWillPopScope;
-  final void Function()? onWillPopPressed;
 
   RenderBox? _getRenderObjectFromContext() {
     try {
@@ -453,14 +438,8 @@ class _Overlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: addWillPopScope
-          ? () async {
-              onWillPopPressed?.call();
-              return false;
-            }
-          : null,
-      child: OrientationBuilder(builder: (context, orientation) {
+    return OrientationBuilder(
+      builder: (context, orientation) {
         return AnimatedBuilder(
           animation: ModalRoute.of(context)!.secondaryAnimation!,
           builder: (animatedBuilderContext, _) {
@@ -498,7 +477,7 @@ class _Overlay extends StatelessWidget {
             );
           },
         );
-      }),
+      },
     );
   }
 

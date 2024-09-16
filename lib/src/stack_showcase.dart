@@ -29,19 +29,15 @@ import 'package:flutter/material.dart';
 import '../showcaseview.dart';
 import 'extension.dart';
 import 'get_position.dart';
-import 'layout_overlays.dart';
 import 'shape_clipper.dart';
 import 'tooltip_widget.dart';
 
-class Showcase extends StatefulWidget {
-  @override
-
+class StackShowcase extends StatefulWidget {
   /// A key that is unique across the entire app.
   ///
   /// This Key will be used to control state of individual showcase and also
   /// used in [ShowCaseWidgetState.startShowCase] to define position of current
   /// target widget while showcasing.
-  final GlobalKey key;
 
   /// Target widget that will be showcased or highlighted
   final Widget child;
@@ -238,8 +234,9 @@ class Showcase extends StatefulWidget {
   final Color? borderAroundTargetColor;
   final bool joinShowcaseAndFocusedWidgets;
 
-  const Showcase({
-    required this.key,
+  const StackShowcase({
+    required GlobalKey<StackShowcaseState> key,
+    // required this.showCaseKey,
     required this.child,
     this.title,
     this.titleAlignment = TextAlign.start,
@@ -313,10 +310,12 @@ class Showcase extends StatefulWidget {
                 ? true
                 : targetBorderRadius == null ||
                     targetBorderRadius == BorderRadius.zero,
-            "Can't join showcase and focused widgets with target border radius");
+            "Can't join showcase and focused widgets with target border radius"),
+        super(key: key);
 
-  const Showcase.withWidget({
-    required this.key,
+  const StackShowcase.withWidget({
+    required GlobalKey<StackShowcaseState> key,
+    // required this.showCaseKey,
     required this.child,
     required this.container,
     required this.height,
@@ -379,62 +378,69 @@ class Showcase extends StatefulWidget {
                 ? true
                 : targetBorderRadius == null ||
                     targetBorderRadius == BorderRadius.zero,
-            "Can't join showcase and focused widgets with target border radius");
+            "Can't join showcase and focused widgets with target border radius"),
+        super(key: key);
 
   @override
-  State<Showcase> createState() => _ShowcaseState();
+  State<StackShowcase> createState() => StackShowcaseState();
 }
 
-class _ShowcaseState extends State<Showcase> {
-  bool _showShowCase = false;
+class StackShowcaseState extends State<StackShowcase> {
+  bool _showShowCase = true;
   bool _isScrollRunning = false;
   bool _isTooltipDismissed = false;
   Timer? timer;
   GetPosition? position;
 
-  ShowCaseWidgetState get showCaseWidgetState => ShowCaseWidget.of(context);
+  StackShowCaseWidgetState get showCaseWidgetState =>
+      StackShowCaseWidget.of(context);
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     position ??= GetPosition(
-      key: widget.key,
+      key: (widget.key as GlobalKey),
       padding: widget.targetPadding,
       screenWidth: MediaQuery.of(context).size.width,
       screenHeight: MediaQuery.of(context).size.height,
     );
-    showOverlay();
+    // showOverlay();
   }
 
   /// show overlay if there is any target widget
   ///
-  void showOverlay() {
-    final activeStep = ShowCaseWidget.activeTargetWidget(context);
-    setState(() {
-      _showShowCase = activeStep == widget.key;
-    });
+  // void showOverlay() {
+  //   final activeStep = ShowCaseWidget.activeTargetWidget(context);
+  //   setState(() {
+  //     // _showShowCase = activeStep == widget.key;
+  //   });
 
-    if (activeStep == widget.key) {
-      if (!widget.disableAutoScroll &&
-          ShowCaseWidget.of(context).enableAutoScroll) {
-        _scrollIntoView();
-      }
+  //   if (activeStep == widget.key) {
+  //     if (!widget.disableAutoScroll &&
+  //         ShowCaseWidget.of(context).enableAutoScroll) {
+  //       _scrollIntoView();
+  //     }
 
-      if (showCaseWidgetState.autoPlay) {
-        timer = Timer(
-            Duration(seconds: showCaseWidgetState.autoPlayDelay.inSeconds),
-            _nextIfAny);
-      }
+  //     // if (showCaseWidgetState.autoPlay) {
+  //     //   timer = Timer(
+  //     //       Duration(seconds: showCaseWidgetState.autoPlayDelay.inSeconds),
+  //     //       _nextIfAny);
+  //     // }
+  //   }
+  // }
+
+  void scrollIntoViewOld() {
+    if (widget.disableAutoScroll ||
+        !StackShowCaseWidget.of(context).enableAutoScroll) {
+      return;
     }
-  }
 
-  void _scrollIntoView() {
     ambiguate(WidgetsBinding.instance)?.addPostFrameCallback((timeStamp) async {
       setState(() {
         _isScrollRunning = true;
       });
       await Scrollable.ensureVisible(
-        widget.key.currentContext!,
+        (widget.key as GlobalKey).currentContext!,
         duration: showCaseWidgetState.widget.scrollDuration,
         alignment: 0.5,
       );
@@ -444,36 +450,94 @@ class _ShowcaseState extends State<Showcase> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return AnchoredOverlay(
-      overlayBuilder: (context, rectBound, offset) {
+  Future<void> scrollIntoView({
+    bool disableScroll = false,
+  }) async {
+    if (widget.disableAutoScroll ||
+        !StackShowCaseWidget.of(context).enableAutoScroll ||
+        disableScroll) {
+      return;
+    }
+
+    final completer = Completer<void>();
+
+    _isScrollRunning = true;
+    ambiguate(WidgetsBinding.instance)?.addPostFrameCallback((timeStamp) async {
+      // setState(() {
+
+      // });
+
+      await Scrollable.ensureVisible(
+        (widget.key as GlobalKey).currentContext!,
+        duration: showCaseWidgetState.widget.scrollDuration,
+        alignment: 0.5,
+      );
+      // setState(() {
+      _isScrollRunning = false;
+      // });
+
+      completer.complete();
+    });
+
+    return completer.future;
+  }
+
+  Widget? getOverlayWidget() {
+    final box = context.findRenderObject() as RenderBox?;
+
+    if (box == null) {
+      return null;
+    }
+    return AnimatedBuilder(
+      animation: ModalRoute.of(context)!.secondaryAnimation!,
+      builder: (context, _) {
+        final topLeft =
+            box.size.topLeft(box.localToGlobal(const Offset(0.0, 0.0)));
+        final bottomRight =
+            box.size.bottomRight(box.localToGlobal(const Offset(0.0, 0.0)));
+        Rect anchorBounds;
+        anchorBounds = (topLeft.dx.isNaN ||
+                topLeft.dy.isNaN ||
+                bottomRight.dx.isNaN ||
+                bottomRight.dy.isNaN)
+            ? const Rect.fromLTRB(0.0, 0.0, 0.0, 0.0)
+            : Rect.fromLTRB(
+                topLeft.dx,
+                topLeft.dy,
+                bottomRight.dx,
+                bottomRight.dy,
+              );
+        final anchorCenter = box.size.center(topLeft);
+
         final size = MediaQuery.of(context).size;
-        position = GetPosition(
-          key: widget.key,
-          padding: widget.targetPadding,
-          screenWidth: size.width,
-          screenHeight: size.height,
+
+        return buildOverlayOnTarget(
+          anchorCenter,
+          anchorBounds.size,
+          anchorBounds,
+          size,
         );
-        return buildOverlayOnTarget(offset, rectBound.size, rectBound, size);
       },
-      showOverlay: true,
-      child: widget.child,
     );
   }
 
-  Future<void> _nextIfAny() async {
-    if (timer != null && timer!.isActive) {
-      if (showCaseWidgetState.enableAutoPlayLock) {
-        return;
-      }
-      timer!.cancel();
-    } else if (timer != null && !timer!.isActive) {
-      timer = null;
-    }
-    await _reverseAnimateTooltip();
-    showCaseWidgetState.completed(widget.key);
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
+
+  // Future<void> _nextIfAny() async {
+  //   if (timer != null && timer!.isActive) {
+  //     if (showCaseWidgetState.enableAutoPlayLock) {
+  //       return;
+  //     }
+  //     timer!.cancel();
+  //   } else if (timer != null && !timer!.isActive) {
+  //     timer = null;
+  //   }
+  //   await _reverseAnimateTooltip();
+  //   showCaseWidgetState.completed(widget.key);
+  // }
 
   Future<void> _getOnTargetTap() async {
     if (widget.disableNextOnTap) {
@@ -485,7 +549,7 @@ class _ShowcaseState extends State<Showcase> {
       showCaseWidgetState.dismiss();
       widget.onTargetClick!();
     } else {
-      (widget.onTargetClick ?? _nextIfAny).call();
+      // (widget.onTargetClick ?? _nextIfAny).call();
     }
   }
 
@@ -522,14 +586,19 @@ class _ShowcaseState extends State<Showcase> {
     // provided blur is less than 0.
     blur = kIsWeb && blur < 0 ? 0 : blur;
 
+    final routeTransitionAnimationValue =
+        ModalRoute.of(context)!.secondaryAnimation!.value;
+
+    final bool hide = _isScrollRunning ||
+        routeTransitionAnimationValue - routeTransitionAnimationValue.toInt() !=
+            0.0;
+
     Widget baseOverlay = ClipPath(
       clipper: RRectClipper(
-        area: _isScrollRunning ? Rect.zero : rectBound,
+        area: hide ? Rect.zero : rectBound,
         isCircle: widget.targetShapeBorder == const CircleBorder(),
-        radius:
-            _isScrollRunning ? BorderRadius.zero : widget.targetBorderRadius,
-        overlayPadding:
-            _isScrollRunning ? EdgeInsets.zero : widget.targetPadding,
+        radius: hide ? BorderRadius.zero : widget.targetBorderRadius,
+        overlayPadding: hide ? EdgeInsets.zero : widget.targetPadding,
       ),
       child: blur != 0
           ? BackdropFilter(
@@ -554,7 +623,7 @@ class _ShowcaseState extends State<Showcase> {
     baseOverlay = Stack(
       children: [
         baseOverlay,
-        if (!_isScrollRunning && widget.addBorderAroundTarget)
+        if (!hide && widget.addBorderAroundTarget)
           Positioned(
             left: rectBound.left,
             top: rectBound.top,
@@ -629,17 +698,14 @@ class _ShowcaseState extends State<Showcase> {
             children: [
               ClipPath(
                 clipper: RRectClipper(
-                  area: _isScrollRunning ? Rect.zero : anchorBounds,
+                  area: hide ? Rect.zero : anchorBounds,
                   isCircle: widget.targetShapeBorder == const CircleBorder(),
-                  radius: _isScrollRunning
-                      ? BorderRadius.zero
-                      : widget.targetBorderRadius,
-                  overlayPadding:
-                      _isScrollRunning ? EdgeInsets.zero : widget.targetPadding,
+                  radius: hide ? BorderRadius.zero : widget.targetBorderRadius,
+                  overlayPadding: hide ? EdgeInsets.zero : widget.targetPadding,
                 ),
                 child: baseOverlay,
               ),
-              if (!_isScrollRunning && widget.addBorderAroundTarget)
+              if (!hide && widget.addBorderAroundTarget)
                 Positioned(
                   left: anchorBounds.left,
                   top: anchorBounds.top,
@@ -702,13 +768,13 @@ class _ShowcaseState extends State<Showcase> {
               GestureDetector(
                 onTap: () {
                   if (!showCaseWidgetState.disableBarrierInteraction) {
-                    _nextIfAny();
+                    // _nextIfAny();
                   }
                 },
                 child: baseOverlay,
               ),
-              if (_isScrollRunning) Center(child: widget.scrollLoadingWidget),
-              if (!_isScrollRunning) ...[
+              if (hide) Center(child: widget.scrollLoadingWidget),
+              if (!hide) ...[
                 _TargetWidget(
                   offset: offset,
                   size: size,
@@ -722,7 +788,7 @@ class _ShowcaseState extends State<Showcase> {
                 ),
                 ...focusedWidgetsPointerAbsorber,
               ],
-              if (!_isScrollRunning)
+              if (!hide)
                 ToolTipWidget(
                   position: position,
                   offset: offset,

@@ -55,36 +55,32 @@ class AnchoredOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return OverlayBuilder(
-          showOverlay: showOverlay,
-          overlayBuilder: (overlayContext) {
-            // To calculate the "anchor" point we grab the render box of
-            // our parent Container and then we find the center of that box.
-            final box = context.findRenderObject() as RenderBox;
-            final topLeft =
-                box.size.topLeft(box.localToGlobal(const Offset(0.0, 0.0)));
-            final bottomRight =
-                box.size.bottomRight(box.localToGlobal(const Offset(0.0, 0.0)));
-            Rect anchorBounds;
-            anchorBounds = (topLeft.dx.isNaN ||
-                    topLeft.dy.isNaN ||
-                    bottomRight.dx.isNaN ||
-                    bottomRight.dy.isNaN)
-                ? const Rect.fromLTRB(0.0, 0.0, 0.0, 0.0)
-                : Rect.fromLTRB(
-                    topLeft.dx,
-                    topLeft.dy,
-                    bottomRight.dx,
-                    bottomRight.dy,
-                  );
-            final anchorCenter = box.size.center(topLeft);
-            return overlayBuilder!(overlayContext, anchorBounds, anchorCenter);
-          },
-          child: child,
-        );
+    return OverlayBuilder(
+      showOverlay: showOverlay,
+      overlayBuilder: (overlayContext) {
+        // To calculate the "anchor" point we grab the render box of
+        // our parent Container and then we find the center of that box.
+        final box = context.findRenderObject() as RenderBox;
+        final topLeft =
+            box.size.topLeft(box.localToGlobal(const Offset(0.0, 0.0)));
+        final bottomRight =
+            box.size.bottomRight(box.localToGlobal(const Offset(0.0, 0.0)));
+        Rect anchorBounds;
+        anchorBounds = (topLeft.dx.isNaN ||
+                topLeft.dy.isNaN ||
+                bottomRight.dx.isNaN ||
+                bottomRight.dy.isNaN)
+            ? const Rect.fromLTRB(0.0, 0.0, 0.0, 0.0)
+            : Rect.fromLTRB(
+                topLeft.dx,
+                topLeft.dy,
+                bottomRight.dx,
+                bottomRight.dy,
+              );
+        final anchorCenter = box.size.center(topLeft);
+        return overlayBuilder!(overlayContext, anchorBounds, anchorCenter);
       },
+      child: child,
     );
   }
 }
@@ -133,15 +129,17 @@ class _OverlayBuilderState extends State<OverlayBuilder> {
   @override
   void didUpdateWidget(OverlayBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
-    ambiguate(WidgetsBinding.instance)
-        ?.addPostFrameCallback((_) => syncWidgetAndOverlay());
+    ambiguate(WidgetsBinding.instance)?.addPostFrameCallback((_) {
+      if (isShowingOverlay()) syncWidgetAndOverlay();
+    });
   }
 
   @override
   void reassemble() {
     super.reassemble();
-    ambiguate(WidgetsBinding.instance)
-        ?.addPostFrameCallback((_) => syncWidgetAndOverlay());
+    ambiguate(WidgetsBinding.instance)?.addPostFrameCallback((_) {
+      if (isShowingOverlay()) syncWidgetAndOverlay();
+    });
   }
 
   @override

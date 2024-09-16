@@ -24,3 +24,7 @@ library showcaseview;
 
 export 'src/showcase.dart';
 export 'src/showcase_widget.dart';
+export 'src/tooltip_widget.dart' show TooltipAlignment;
+export 'src/utils.dart' show DynamicKeys;
+export 'src/stack_showcase.dart';
+export 'src/stack_showcase_widget.dart';

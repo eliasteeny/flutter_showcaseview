@@ -20,9 +20,32 @@
  * SOFTWARE.
  */
 
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 
 import '../showcaseview.dart';
+
+class CurrentDisplayedShowCaseInstances {
+  static HashMap<int, ShowCaseWidgetState> states = HashMap();
+
+  static int addState(ShowCaseWidgetState state) {
+    final index = states.isEmpty ? 0 : states.entries.last.key + 1;
+
+    states[index] = state;
+    return index;
+  }
+
+  static void removeState(int index) {
+    states.remove(index);
+  }
+
+  static void dismissAll() {
+    states.forEach((key, value) {
+      value.dismiss();
+    });
+  }
+}
 
 class ShowCaseWidget extends StatefulWidget {
   final Builder builder;
@@ -111,6 +134,10 @@ class ShowCaseWidget extends StatefulWidget {
     }
   }
 
+  static void dismissAll() {
+    CurrentDisplayedShowCaseInstances.dismissAll();
+  }
+
   @override
   ShowCaseWidgetState createState() => ShowCaseWidgetState();
 }
@@ -126,13 +153,22 @@ class ShowCaseWidgetState extends State<ShowCaseWidget> {
   late bool enableAutoScroll;
   late bool disableBarrierInteraction;
 
+  late int _instanceIndex;
+
   /// Returns value of  [ShowCaseWidget.blurValue]
   double get blurValue => widget.blurValue;
 
   @override
   void initState() {
     super.initState();
+    _instanceIndex = CurrentDisplayedShowCaseInstances.addState(this);
     _init();
+  }
+
+  @override
+  void dispose() {
+    CurrentDisplayedShowCaseInstances.removeState(_instanceIndex);
+    super.dispose();
   }
 
   @override
@@ -200,10 +236,13 @@ class ShowCaseWidgetState extends State<ShowCaseWidget> {
     }
   }
 
+  bool isLastItem() =>
+      ids != null && ((activeWidgetId ?? 0) + 1) >= ids!.length && mounted;
+
   /// Completes current active showcase and starts previous one
   /// otherwise will finish the entire showcase view
   void previous() {
-    if (ids != null && ((activeWidgetId ?? 0) - 1) >= 0 && mounted) {
+    if (canGoToPrevious()) {
       setState(() {
         _onComplete();
         activeWidgetId = activeWidgetId! - 1;
@@ -217,6 +256,9 @@ class ShowCaseWidgetState extends State<ShowCaseWidget> {
       });
     }
   }
+
+  bool canGoToPrevious() =>
+      ids != null && ((activeWidgetId ?? 0) - 1) >= 0 && mounted;
 
   /// Dismiss entire showcase view
   void dismiss() {

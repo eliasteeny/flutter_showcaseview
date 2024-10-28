@@ -26,7 +26,6 @@ import 'package:flutter/material.dart';
 
 import 'get_position.dart';
 import 'measure_size.dart';
-import 'dart:ui' as ui;
 
 const _kDefaultPaddingFromParent = 14.0;
 
@@ -146,12 +145,12 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
     final titleStyle = widget.titleTextStyle ??
         Theme.of(context)
             .textTheme
-            .headline6!
+            .titleLarge!
             .merge(TextStyle(color: widget.textColor));
     final descriptionStyle = widget.descTextStyle ??
         Theme.of(context)
             .textTheme
-            .subtitle2!
+            .bodySmall!
             .merge(TextStyle(color: widget.textColor));
 
     final titleSize =
@@ -189,7 +188,7 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
       widget.previousButtonText!,
       Theme.of(context)
           .textTheme
-          .subtitle2!
+          .bodySmall!
           .copyWith(color: Theme.of(context).primaryColor),
     );
 
@@ -513,7 +512,7 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
                                               style: widget.titleTextStyle ??
                                                   Theme.of(context)
                                                       .textTheme
-                                                      .headline6!
+                                                      .titleLarge!
                                                       .merge(
                                                         TextStyle(
                                                           color:
@@ -528,7 +527,7 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
                                         style: widget.descTextStyle ??
                                             Theme.of(context)
                                                 .textTheme
-                                                .subtitle2!
+                                                .bodySmall!
                                                 .merge(
                                                   TextStyle(
                                                     color: widget.textColor,
@@ -627,7 +626,7 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
                   widget.previousButtonText!,
                   style: Theme.of(context)
                       .textTheme
-                      .subtitle2
+                      .bodySmall
                       ?.copyWith(color: Theme.of(context).primaryColor),
                 ),
               ),
@@ -647,7 +646,7 @@ class _ToolTipWidgetState extends State<ToolTipWidget>
                   widget.nextButtonText!,
                   style: Theme.of(context)
                       .textTheme
-                      .subtitle2
+                      .bodySmall
                       ?.copyWith(color: Theme.of(context).primaryColor),
                 ),
               ),
